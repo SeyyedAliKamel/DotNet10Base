@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/Src/" />
+  <Folder Name="/Src/Common/">
+    <Project Path="Common/Common.csproj" />
+  </Folder>
+  <Folder Name="/Src/Core/">
+    <Project Path="Application/Application.csproj" />
+    <Project Path="Domain/Domain.csproj" />
+  </Folder>
+  <Folder Name="/Src/Infrastructure/">
+    <Project Path="Infrastructure/Infrastructure.csproj" />
+    <Project Path="Persistence/Persistence.csproj" />
+  </Folder>
+  <Folder Name="/Src/Presentation/">
+    <Project Path="AdminWebApi/AdminWebApi.csproj" />
+    <Project Path="FrontendWebApi/FrontendWebApi.csproj" />
+    <Project Path="StaticFiles/StaticFile.csproj" />
+  </Folder>
+</Solution>

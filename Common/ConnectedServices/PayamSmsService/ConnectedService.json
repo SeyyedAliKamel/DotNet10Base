@@ -1,0 +1,17 @@
+{
+  "ExtendedData": {
+    "inputs": [
+      "C:/Users/Shahabi/AppData/Local/Microsoft/Windows/INetCache/IE/EJHCDWTH/v2[1]"
+    ],
+    "collectionTypes": [
+      "System.Array",
+      "System.Collections.Generic.Dictionary`2"
+    ],
+    "messageContract": true,
+    "namespaceMappings": [
+      "*, PayamSmsService"
+    ],
+    "targetFramework": "net6.0",
+    "typeReuseMode": "All"
+  }
+}
