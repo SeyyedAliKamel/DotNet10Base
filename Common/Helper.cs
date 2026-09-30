@@ -1,5 +1,4 @@
 ﻿using Common.Dto;
-using Domain.Attributes;
 using Kavenegar;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
@@ -13,17 +12,6 @@ namespace Common
 {
     public static class Helper
     {
-        public static List<ResultListTitlePathIdDto> GetBreadcrumb(this ResultListTitlePathIdDto item)
-        {
-            var list = new List<ResultListTitlePathIdDto>();
-            var current = item;
-            while (current != null)
-            {
-                list.Insert(0, current);
-                current = current.Parent;
-            }
-            return list;
-        }
         public static string ConvertTitleToSlug(string title)
         {
             string slug = title.ToLower().ToEnglish().ToPersian(); // Convert to lowercase

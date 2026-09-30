@@ -145,16 +145,13 @@ namespace Application.Services.Products.Commands
                     MetaTitle = request.MetaTitle,
                     MetaDescription = request.MetaDescription,
                     Price = request.Price,
-                    WholePrice = request.WholePrice,
                     Quantity = request.Quantity,
                     Weight = request.Weight,
                     MinBuyLimit = request.MinBuyLimit,
                     MaxBuyLimit = request.MaxBuyLimit,
                     Rating = request.Rating,
                     BrandId = request.BrandId,
-                    IsGrounded = (bool)request.IsGrounded,
                     IsActive = (bool)request.IsActive,
-                    Attribute = request.Attribute,
                     CreatedById = currentUserId,
                 };
 
@@ -365,16 +362,14 @@ namespace Application.Services.Products.Commands
                 product.MetaTitle = request.MetaTitle;
                 product.MetaDescription = request.MetaDescription;
                 product.Price = request.Price;
-                product.WholePrice = request.WholePrice;
                 product.Quantity = request.Quantity;
                 product.Weight = request.Weight;
                 product.MinBuyLimit = request.MinBuyLimit;
                 product.MaxBuyLimit = request.MaxBuyLimit;
-                product.IsGrounded = (bool)request.IsGrounded;
                 product.Rating = request.Rating;
                 product.BrandId = request.BrandId;
                 product.IsActive = (bool)request.IsActive;
-                product.Attribute = request.Attribute;
+                
                 product.UpdatedById = currentUserId;
 
                 _context.SetUserId(currentUserId);
@@ -910,36 +905,20 @@ namespace Application.Services.Products.Commands
 
             var itemsToRemove = affectedItems
                 .Where(bi => !product.IsActive
-                          || product.Quantity <= 0
-                          || (bi.IsGrounded && !product.IsGrounded))
+                          || product.Quantity <= 0)
                 .ToList();
 
             var itemsToUpdate = affectedItems.Except(itemsToRemove).ToList();
-
-            var (offerDiscount, offerDiscountType) = ResolveOfferDiscount(product);
 
             var touchedBaskets = new List<Basket>();
 
             foreach (var item in itemsToUpdate)
             {
-                // Only overwrite the discount if it's the kind we manage automatically
-                // (i.e. not something a manual/admin override set on the item).
-                var isOfferManaged = item.DiscountType == null || item.DiscountType == DiscountTypeProductOffer;
-
                 var priceChanged = item.Price != product.Price;
-                var discountChanged = isOfferManaged
-                    && (item.Discount != offerDiscount || item.DiscountType != offerDiscountType);
-
-                if (!priceChanged && !discountChanged)
+                if (!priceChanged)
                     continue;
 
                 item.Price = product.Price;
-                if (isOfferManaged)
-                {
-                    item.Discount = offerDiscount;
-                    item.DiscountType = offerDiscountType;
-                }
-
                 _context.BasketItems.Update(item);
                 touchedBaskets.Add(item.Basket);
             }
@@ -952,8 +931,6 @@ namespace Application.Services.Products.Commands
 
             if (!touchedBaskets.Any())
                 return;
-
-            ClearBasketDiscountsIfAny(touchedBaskets.Distinct());
 
             _context.SaveChanges();
         }
@@ -975,52 +952,10 @@ namespace Application.Services.Products.Commands
                 .ToList();
 
             _context.BasketItems.RemoveRange(affectedItems);
-            ClearBasketDiscountsIfAny(affectedBaskets);
-
             _context.SaveChanges();
         }
 
-        private void ClearBasketDiscountsIfAny(IEnumerable<Basket> baskets)
-        {
-            foreach (var basket in baskets)
-            {
-                if (basket.DiscountId == null && basket.DiscountCode == null && basket.DiscountPrice == null)
-                    continue;
-
-                var reservation = _context.Discounts.FirstOrDefault(d =>
-                    d.BasketId == basket.Id &&
-                    d.DiscountCodeId == basket.DiscountId!.Value &&
-                    !d.Used);
-
-                if (reservation != null)
-                    _context.Discounts.Remove(reservation);
-
-                basket.DiscountId = null;
-                basket.DiscountCode = null;
-                basket.DiscountPrice = null;
-                basket.PriceAfterDiscount = null;
-            }
-        }
-
-        private const int DiscountTypeProductOffer = 1;
-
-        private (long Discount, int? DiscountType) ResolveOfferDiscount(Product product)
-        {
-            var now = DateTime.UtcNow;
-
-            var activeOffer = _context.ProductOffers
-                .Where(o => o.ProductId == product.Id)
-                .Where(o => o.OfferStatus == OfferStatus.Active)
-                .Where(o => o.OfferStart == null || o.OfferStart <= now)
-                .Where(o => o.OfferEnd == null || o.OfferEnd >= now)
-                .OrderByDescending(o => o.Id)
-                .FirstOrDefault();
-
-            if (activeOffer == null)
-                return (0, null);
-
-            return ((long)activeOffer.OfferPercentage, DiscountTypeProductOffer);
-        }
+        
 
         private static ProductResultDto MapToResult(Product product) => new()
         {
@@ -1031,16 +966,13 @@ namespace Application.Services.Products.Commands
             LongDescription = product.LongDescription,
             MetaTitle = product.MetaTitle,
             MetaDescription = product.MetaDescription,
-            Attribute = product.Attribute,
             Price = product.Price,
-            WholePrice = product.WholePrice,
             Quantity = product.Quantity,
             Weight = product.Weight,
             MinBuyLimit = product.MinBuyLimit,
             MaxBuyLimit = product.MaxBuyLimit,
             Rating = product.Rating,
             BrandId = product.BrandId,
-            IsGrounded = product.IsGrounded,
             IsActive = product.IsActive,
         };
 

@@ -427,22 +427,6 @@ namespace Application.Services.AdditionalInformations.Queries
                 if (review != null)
                     review.Mobile = MaskMobile(review.Mobile);
 
-                // Images uploaded through UploadBasketItemImages
-                var images = (from bii in _context.BasketItemImages.AsNoTracking()
-                              join img in _context.Images.AsNoTracking() on bii.ImageId equals img.Id
-                              where bii.BasketItemId == basketItem.Id
-                                    && !bii.IsDeleted
-                                    && !img.IsDeleted
-                              orderby img.Id
-                              select new ReviewImageDto
-                              {
-                                  Id = img.Id,
-                                  ImageUrl = img.ImageUrl,
-                                  ImageDescription = img.ImageDescription,
-                                  IsActive = bii.IsActive
-                              })
-                    .ToList();
-
                 return new ResultDto<ReviewUserProductDto>
                 {
                     Data = new ReviewUserProductDto
@@ -452,7 +436,6 @@ namespace Application.Services.AdditionalInformations.Queries
                         ProductId = basketItem.ProductId,
                         ProductName = basketItem.ProductName,
                         Review = review,
-                        Images = images,
                     },
                     IsSuccess = true,
                     Status = 200,

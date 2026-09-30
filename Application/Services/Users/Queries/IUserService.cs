@@ -32,7 +32,6 @@ namespace Application.Services.Users.Queries
     {
         private readonly IDataBaseContext _context;
 
-        // Kept in sync with UserCUDService.DateFormat so Birthday round-trips through edit forms.
         private const string DateFormat = "yyyy-MM-dd HH:mm:ss";
 
         public UserService(IDataBaseContext context)
@@ -213,8 +212,6 @@ namespace Application.Services.Users.Queries
             {
                 // Add .Include for City and State
                 var user = _context.Users
-                    .Include(u => u.City)
-                    .Include(u => u.State)
                     .Where(x => x.Id == id)
                     .Select(p => new
                     {
@@ -227,9 +224,6 @@ namespace Application.Services.Users.Queries
                         p.Birthday,
                         p.Gender,
                         p.Job,
-                        p.Blend,
-                        CityName = p.City != null ? p.City.Name : null,
-                        StateName = p.State != null ? p.State.Name : null
                     }).FirstOrDefault();
 
                 if (user == null)
@@ -246,9 +240,6 @@ namespace Application.Services.Users.Queries
                     Birthday = user.Birthday.HasValue ? user.Birthday.Value.ToString(DateFormat) : null,
                     Gender = user.Gender.ToString(),
                     Job = user.Job,
-                    Blend = user.Blend.ToString(),
-                    CityName = user.CityName,
-                    StateName = user.StateName
                 };
 
                 return new ResultDto<ResultUserItemDto> { Data = dto, IsSuccess = true, Message = "...", Status = 200 };
@@ -391,8 +382,6 @@ namespace Application.Services.Users.Queries
             try
             {
                 var user = _context.Users
-                    .Include(u => u.City)
-                    .Include(u => u.State)
                     .Where(p => p.Id == userId)
                     .Select(p => new
                     {
@@ -407,9 +396,6 @@ namespace Application.Services.Users.Queries
                         p.Birthday,
                         p.Gender,
                         p.Job,
-                        p.Blend,
-                        CityName = p.City != null ? p.City.Name : null,
-                        StateName = p.State != null ? p.State.Name : null,
                         Roles = p.Roles.Select(x => new { x.Id, x.Name }).ToList()
                     }).FirstOrDefault();
 
@@ -442,9 +428,6 @@ namespace Application.Services.Users.Queries
                         Birthday = user.Birthday.HasValue ? user.Birthday.Value.ToString(DateFormat) : null,
                         Gender = user.Gender.ToString(),
                         Job = user.Job,
-                        Blend = user.Blend.ToString(),
-                        CityName = user.CityName,
-                        StateName = user.StateName,
                     },
                     IsSuccess = true,
                     Message = "اطلاعات کاربر با موفقیت ارسال گردید",
@@ -547,13 +530,9 @@ namespace Application.Services.Users.Queries
         public List<long>? RoleIds { get; set; }
         public long? UserJobId { get; set; }
         public long? Rate { get; set; }
-        // "yyyy-MM-dd HH:mm:ss" string, matches the format accepted by AddUser/EditUser.
         public string? Birthday { get; set; }
-        public string? Gender { get; set; } // Assuming you want the string representation
+        public string? Gender { get; set; }
         public string? Job { get; set; }
-        public string? Blend { get; set; }  // Assuming string representation
-        public string? CityName { get; set; }
-        public string? StateName { get; set; }
         public DateTime? CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
     }
@@ -605,13 +584,9 @@ namespace Application.Services.Users.Queries
         public string ReferalCode { get; set; }
         public bool RequiredChangePassword { get; set; }
         public string? Template { get; set; }
-        // "yyyy-MM-dd HH:mm:ss" string, matches the format accepted by UpdateUserInfo.
         public string? Birthday { get; set; }
         public string? Gender { get; set; }
         public string? Job { get; set; }
-        public string? Blend { get; set; }
-        public string? CityName { get; set; }
-        public string? StateName { get; set; }
     }
 
     public class UserRoleDto

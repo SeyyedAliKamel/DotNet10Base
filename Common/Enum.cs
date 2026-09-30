@@ -1,6 +1,4 @@
-﻿using Domain.Attributes;
-
-namespace Common
+﻿namespace Common
 {
     public enum ResultStatus
     {

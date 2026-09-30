@@ -74,12 +74,10 @@ namespace Application.Services.Products.Queries
                         Description = p.Description,
                         MetaTitle = p.MetaTitle,
                         MetaDescription = p.MetaDescription,
-                        Attribute = p.Attribute,
                         Price = p.Price,
-                        WholePrice = p.WholePrice,
                         Quantity = p.Quantity,
                         Rating = p.Rating,
-                        IsGrounded = p.IsGrounded,
+                        
                         IsActive = p.IsActive,
                         BrandId = p.BrandId,
                         BrandName = p.Brand.Title,
@@ -168,11 +166,10 @@ namespace Application.Services.Products.Queries
                         Description = p.Description,
                         MetaTitle = p.MetaTitle,
                         MetaDescription = p.MetaDescription,
-                        Attribute = p.Attribute,
                         Price = p.Price,
                         Quantity = p.Quantity,
                         Rating = p.Rating,
-                        IsGrounded = p.IsGrounded,
+                        
                         IsActive = p.IsActive,
                         BrandId = p.BrandId,
                         BrandName = p.Brand.Title,
@@ -237,7 +234,6 @@ namespace Application.Services.Products.Queries
                 var query = _context.Products
                     .AsNoTracking()
                     .Where(p => p.IsActive)
-                    .Where(p => p.WholePrice > 0)
                     .AsQueryable();
 
                 query = query.ApplySortingAndFiltering(request.Sort, request.Filter);
@@ -262,12 +258,10 @@ namespace Application.Services.Products.Queries
                         Description = p.Description,
                         MetaTitle = p.MetaTitle,
                         MetaDescription = p.MetaDescription,
-                        Attribute = p.Attribute,
                         Price = p.Price,
-                        WholePrice = p.WholePrice,
                         Quantity = p.Quantity,
                         Rating = p.Rating,
-                        IsGrounded = p.IsGrounded,
+                        
                         IsActive = p.IsActive,
                         BrandId = p.BrandId,
                         BrandName = p.Brand.Title,
@@ -303,17 +297,7 @@ namespace Application.Services.Products.Queries
                     })
                     .ToList();
 
-                // Groundable products get a second row for the ground variant, right after the plain one.
-                if (splitGrounded)
-                {
-                    list = list
-                        .SelectMany(p => p.IsGrounded
-                            ? new[] { p, p.AsGroundedItem() }
-                            : new[] { p })
-                        .ToList();
-                }
-
-                FillBasketCounts(list, userId, publicToken, isWholePrice: true, splitGrounded);
+                FillBasketCounts(list, userId, publicToken);
 
                 return new ResultDto<List<ProductBranchDto>>
                 {
@@ -345,7 +329,7 @@ namespace Application.Services.Products.Queries
             var basketQuery = _context.Baskets.Where(b => b.BasketStatus == BasketStatus.Created);
 
             basketQuery = userId != 0
-                ? basketQuery.Where(b => b.UserId == userId && b.IsWholePrice == isWholePrice)
+                ? basketQuery.Where(b => b.UserId == userId)
                 : basketQuery.Where(b => b.Token == publicToken);
 
             var basketId = basketQuery
@@ -890,11 +874,9 @@ namespace Application.Services.Products.Queries
                         Description = p.Description,
                         MetaTitle = p.MetaTitle,
                         MetaDescription = p.MetaDescription,
-                        Attribute = p.Attribute,
                         Price = p.Price,
                         Quantity = p.Quantity,
                         Rating = p.Rating,
-                        IsGrounded = p.IsGrounded,
                         IsActive = p.IsActive,
                         BrandId = p.BrandId,
                         BrandName = p.Brand.Title,

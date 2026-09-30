@@ -34,8 +34,7 @@ namespace Application.Services.Baskets.Commands
             {
                 var basket = _context.Baskets
                     .FirstOrDefault(p => p.BasketStatus == BasketStatus.Created
-                                       && p.UserId == userId
-                                       && p.IsWholePrice == isWholePrice);
+                                       && p.UserId == userId);
 
                 if (basket == null)
                 {
