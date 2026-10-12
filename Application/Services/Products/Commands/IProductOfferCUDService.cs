@@ -181,7 +181,6 @@ namespace Application.Services.Products.Commands
             if (!touchedBaskets.Any())
                 return;
 
-            ClearBasketDiscountsIfAny(touchedBaskets.Distinct());
             _context.SaveChanges();
         }
 
@@ -201,28 +200,6 @@ namespace Application.Services.Products.Commands
                 return (0, null);
 
             return ((long)activeOffer.OfferPercentage, DiscountTypeProductOffer);
-        }
-
-        private void ClearBasketDiscountsIfAny(IEnumerable<Basket> baskets)
-        {
-            foreach (var basket in baskets)
-            {
-                if (basket.DiscountId == null && basket.DiscountCode == null && basket.DiscountPrice == null)
-                    continue;
-
-                var reservation = _context.Discounts.FirstOrDefault(d =>
-                    d.BasketId == basket.Id &&
-                    d.DiscountCodeId == basket.DiscountId!.Value &&
-                    !d.Used);
-
-                if (reservation != null)
-                    _context.Discounts.Remove(reservation);
-
-                basket.DiscountId = null;
-                basket.DiscountCode = null;
-                basket.DiscountPrice = null;
-                basket.PriceAfterDiscount = null;
-            }
         }
 
         private const int DiscountTypeProductOffer = 1;

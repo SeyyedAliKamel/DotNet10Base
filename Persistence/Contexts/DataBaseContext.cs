@@ -4,20 +4,14 @@ using Domain.Attributes;
 using Domain.Entities.AdditionalInformations;
 using Domain.Entities.Baskets;
 using Domain.Entities.Branches;
-using Domain.Entities.Campaigns;
 using Domain.Entities.Common;
 using Domain.Entities.Contents;
-using Domain.Entities.Discounts;
 using Domain.Entities.HandleException;
-using Domain.Entities.Lotteries;
-using Domain.Entities.Lottery;
 using Domain.Entities.Payments;
 using Domain.Entities.Products;
 using Domain.Entities.Scores;
 using Domain.Entities.Shippings;
-using Domain.Entities.Surveys;
 using Domain.Entities.Users;
-using Domain.Entities.Wallets;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -42,15 +36,11 @@ namespace Persistence.Contexts
         public DbSet<UserSession> UserSessions { get; set; }
         public DbSet<HandleException> HandleExceptions { get; set; }
         public DbSet<Score> Scores { get; set; }
-        public DbSet<ScoreGift> ScoreGifts { get; set; }
-        public DbSet<Wallet> Wallets { get; set; }
         public DbSet<LogActivity> LogActivities { get; set; }
         public DbSet<LoginLog> LoginLogs { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<PermissionCategory> PermissionCategories { get; set; }
-        public DbSet<Email> Emails { get; set; }
-        public DbSet<EmailTemplate> EmailTemplates { get; set; }
         public DbSet<Slug> Slugs { get; set; }
         public DbSet<Hashtag> Hashtags { get; set; }
         public DbSet<Brand> Brands { get; set; }
@@ -74,23 +64,11 @@ namespace Persistence.Contexts
         public DbSet<State> States { get; set; }
         public DbSet<Menu> Menus { get; set; }
         public DbSet<Branch> Branches { get; set; }
-        public DbSet<Campaign> Campaigns { get; set; }
         public DbSet<Image> Images { get; set; }
         public DbSet<Review> Reviews { get; set; }
-        public DbSet<Discount> Discounts { get; set; }
-        public DbSet<DiscountCode> DiscountCodes { get; set; }
         public DbSet<PaymentTransaction> PaymentTransactions { get; set; }
-        public DbSet<ManageScore> ManageScores { get; set; }
         public DbSet<ContactUs> ContactUses { get; set; }
-        public DbSet<BasketItemImage> BasketItemImages { get; set; }
         public DbSet<Setting> Settings { get; set; }
-        public DbSet<LotteryDate> LotteryDates { get; set; }
-        public DbSet<LotteryResult> LotteryResults { get; set; }
-        public DbSet<SurveyAnswer> SurveyAnswers { get; set; }
-        public DbSet<SurveyQuestion> SurveyQuestions { get; set; }
-        public DbSet<SurveyQuestionOption> SurveyQuestionOptions { get; set; }
-        public DbSet<SurveySubmission> SurveySubmissions { get; set; }
-        public DbSet<ChequeImage> ChequeImages { get; set; }
 
 
 

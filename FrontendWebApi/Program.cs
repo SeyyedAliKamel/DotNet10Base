@@ -6,15 +6,9 @@ using Application.Services.Baskets.Commands;
 using Application.Services.Baskets.Queries;
 using Application.Services.Branches.Commands;
 using Application.Services.Branches.Queries;
-using Application.Services.Campaigns.Commands;
-using Application.Services.Campaigns.Queries;
 using Application.Services.Contents.Commands;
 using Application.Services.Contents.Queries;
-using Application.Services.Discounts.Commands;
-using Application.Services.Discounts.Queries;
 using Application.Services.Images.Queries;
-using Application.Services.Lottery.Commands;
-using Application.Services.Lottery.Queries;
 using Application.Services.Payments.Queries;
 using Application.Services.PermissionCategories.Commands;
 using Application.Services.PermissionCategories.Queries;
@@ -30,14 +24,10 @@ using Application.Services.Search.Queries;
 using Application.Services.SeedData;
 using Application.Services.Shippings.Commands;
 using Application.Services.Shippings.Queries;
-using Application.Services.Surveys.Commands;
-using Application.Services.Surveys.Queries;
 using Application.Services.UserAddresses.Commands;
 using Application.Services.UserAddresses.Queries;
 using Application.Services.Users.Commands;
 using Application.Services.Users.Queries;
-using Application.Services.Wallets.Commands;
-using Application.Services.Wallets.Queries;
 using Infrastructure.ExternalApi.FileServer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
@@ -71,17 +61,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserAddressCUDService, UserAddressCUDService>();
 builder.Services.AddScoped<IUserAddressService, UserAddressService>();
 
-// Wallet Services
-builder.Services.AddScoped<IWalletCUDService, WalletCUDService>();
-builder.Services.AddScoped<IWalletService, WalletService>();
-
 // Score Services
 builder.Services.AddScoped<IScoreCUDService, ScoreCUDService>();
 builder.Services.AddScoped<IScoreService, ScoreService>();
-
-// ManageScore Services
-builder.Services.AddScoped<IManageScoreCUDService, ManageScoreCUDService>();
-builder.Services.AddScoped<IManageScoreService, ManageScoreService>();
 
 //Role
 builder.Services.AddScoped<IRoleCUDService, RoleCUDService>();
@@ -131,10 +113,6 @@ builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IBranchCUDService, BranchCUDService>();
 builder.Services.AddScoped<IBranchService, BranchService>();
 
-//Campaign
-builder.Services.AddScoped<ICampaignCUDService, CampaignCUDService>();
-builder.Services.AddScoped<ICampaignService, CampaignService>();
-
 //Slug
 builder.Services.AddScoped<ISlugCUDService, SlugCUDService>();
 builder.Services.AddScoped<ISlugService, SlugService>();
@@ -151,10 +129,6 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<IReviewCUDService, ReviewCUDService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 
-//Discount
-builder.Services.AddScoped<IDiscountCUDService, DiscountCUDService>();
-builder.Services.AddScoped<IDiscountService, DiscountService>();
-
 //ContactUs
 builder.Services.AddScoped<IContactUsCUDService, ContactUsCUDService>();
 builder.Services.AddScoped<IContactUsService, ContactUsService>();
@@ -162,14 +136,6 @@ builder.Services.AddScoped<IContactUsService, ContactUsService>();
 //Setting
 builder.Services.AddScoped<ISettingCUDService, SettingCUDService>();
 builder.Services.AddScoped<ISettingService, SettingService>();
-
-//Lottery
-builder.Services.AddScoped<ILotteryCUDService, LotteryCUDService>();
-builder.Services.AddScoped<ILotteryService, LotteryService>();
-
-//Survey
-builder.Services.AddScoped<ISurveyCUDService, SurveyCUDService>();
-builder.Services.AddScoped<ISurveyService, SurveyService>();
 
 builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IFileUploadService, FileUploadService>();

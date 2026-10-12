@@ -22,10 +22,6 @@ namespace Application.Services.Products.Queries
         ResultDto<List<ProductFrontEndDto>> GetProductListFrontEnd(ProductListRequestDto request);
         ResultDto<ProductItemFrontendDto> GetProductItemFrontEnd(long productId, long userId, string publicToken);
 
-        // -------- Branch-facing (active only, exposes both Price and WholePrice) --------
-        ResultDto<List<ProductBranchDto>> GetProductListBranch(ProductListRequestDto request, long userId, string publicToken, bool splitGrounded = false);
-        ResultDto<ProductItemBranchDto> GetProductItemBranch(long productId, long userId, string publicToken);
-
         ResultDto<List<ProductDto>> GetProductListByCategory(ProductListByCategoryRequestDto request);
     }
 
@@ -224,100 +220,6 @@ namespace Application.Services.Products.Queries
             }
         }
 
-        // -------------------- GetListBranch (IsActive only, Price + WholePrice) --------------------
-        public ResultDto<List<ProductBranchDto>> GetProductListBranch(ProductListRequestDto request, long userId, string publicToken, bool splitGrounded = false)
-        {
-            try
-            {
-                string staticPath = _configuration.GetSection("AppSettings")["StaticPath"];
-
-                var query = _context.Products
-                    .AsNoTracking()
-                    .Where(p => p.IsActive)
-                    .AsQueryable();
-
-                query = query.ApplySortingAndFiltering(request.Sort, request.Filter);
-
-                if (string.IsNullOrWhiteSpace(request.Sort))
-                {
-                    query = query.OrderByDescending(s => s.CreatedAt);
-                }
-
-                int rowsCount = 0;
-
-                var page = request.Page <= 0 ? 1 : request.Page;
-                var pageSize = request.PageSize <= 0 ? 20 : request.PageSize;
-
-                var list = query
-                    .ToPaged(page, pageSize, out rowsCount)
-                    .Select(p => new ProductBranchDto
-                    {
-                        Id = p.Id,
-                        ProductId = p.ProductId,
-                        Name = p.Name,
-                        Description = p.Description,
-                        MetaTitle = p.MetaTitle,
-                        MetaDescription = p.MetaDescription,
-                        Price = p.Price,
-                        Quantity = p.Quantity,
-                        Rating = p.Rating,
-                        
-                        IsActive = p.IsActive,
-                        BrandId = p.BrandId,
-                        BrandName = p.Brand.Title,
-                        MainImageUrl = _context.Images
-                            .Where(i => i.ImageType == ImageTypeEnum.Product
-                                     && i.ImageRole == ImageRoleEnum.Primary
-                                     && i.ReferenceId == p.Id)
-                            .Select(i => i.ImageUrl)
-                            .FirstOrDefault() == null ? null :
-                                staticPath + "/Resources/Product/" + _context.Images
-                                    .Where(i => i.ImageType == ImageTypeEnum.Product
-                                             && i.ImageRole == ImageRoleEnum.Primary
-                                             && i.ReferenceId == p.Id)
-                                    .Select(i => i.ImageUrl)
-                                    .FirstOrDefault(),
-                        Slug = _context.Slugs
-                            .Where(s => s.ReferenceId == p.Id && s.Type == SlugTypeEnum.Product)
-                            .Select(s => s.Title)
-                            .FirstOrDefault(),
-                        Offers = _context.ProductOffers
-                            .Where(o => o.ProductId == (int)p.Id && o.OfferStatus == OfferStatus.Active)
-                            .Select(o => new ProductOfferDto
-                            {
-                                Id = o.Id,
-                                ProductId = o.ProductId,
-                                OfferPercentage = o.OfferPercentage,
-                                OfferStatus = o.OfferStatus,
-                                OfferEnd = o.OfferEnd
-                            })
-                            .ToList(),
-                        CreatedAt = p.CreatedAt,
-                        UpdatedAt = p.UpdatedAt,
-                    })
-                    .ToList();
-
-                FillBasketCounts(list, userId, publicToken);
-
-                return new ResultDto<List<ProductBranchDto>>
-                {
-                    Data = list,
-                    Result = new ResultListDto
-                    {
-                        Current = page,
-                        Count = rowsCount
-                    },
-                    IsSuccess = true,
-                    Status = 200,
-                    Message = "لیست محصولات"
-                };
-            }
-            catch (Exception ex)
-            {
-                return HandleException<List<ProductBranchDto>>(ex);
-            }
-        }
-
         // Fills how many of each product are in the caller's current basket.
         // A product can sit in the basket as two separate lines (ground / not ground).
         // splitGrounded: each row counts only the basket line matching its IsGroundedItem; otherwise both lines are summed.
@@ -374,14 +276,11 @@ namespace Application.Services.Products.Queries
                         LongDescription = p.LongDescription,
                         MetaTitle = p.MetaTitle,
                         MetaDescription = p.MetaDescription,
-                        Attribute = p.Attribute,
                         Price = p.Price,
-                        WholePrice = p.WholePrice,
                         Quantity = p.Quantity,
                         MinBuyLimit = p.MinBuyLimit,
                         MaxBuyLimit = p.MaxBuyLimit,
                         Rating = p.Rating,
-                        IsGrounded = p.IsGrounded,
                         IsActive = p.IsActive,
                         BrandId = p.BrandId,
                         BrandName = p.Brand.Title,
@@ -403,16 +302,6 @@ namespace Application.Services.Products.Queries
                                     staticPath + "/Resources/Product/" + i.ImageUrl,
                                 ImageDescription = i.ImageDescription,
                                 ImageTypeEnum = i.ImageRole
-                            })
-                            .ToList(),
-                        UserImages = _context.BasketItemImages
-                            .Where(bi => bi.ProductId == p.Id && bi.Image.IsActive)
-                            .Select(bi => new ProductUserImageDto
-                            {
-                                Id = bi.Image.Id,
-                                ImageUrl = staticPath + "/Resources/BasketItem/" + bi.Image.ImageUrl,
-                                ImageDescription = bi.Image.ImageDescription,
-                                UserId = bi.UserId
                             })
                             .ToList(),
                         Categories = _context.ProductProductCategories
@@ -506,13 +395,11 @@ namespace Application.Services.Products.Queries
                 LongDescription = p.LongDescription,
                 MetaTitle = p.MetaTitle,
                 MetaDescription = p.MetaDescription,
-                Attribute = p.Attribute,
                 Price = p.Price,
                 Quantity = p.Quantity,
                 MinBuyLimit = p.MinBuyLimit,
                 MaxBuyLimit = p.MaxBuyLimit,
                 Rating = p.Rating,
-                IsGrounded = p.IsGrounded,
                 IsActive = p.IsActive,
                 BrandId = p.BrandId,
                 BrandName = p.Brand.Title,
@@ -533,16 +420,6 @@ namespace Application.Services.Products.Queries
                         Preview = _configuration.GetSection("AppSettings")["StaticPath"] + "/Resources/Product/" + i.ImageUrl
                     })
                     .Take(2)
-                    .ToList(),
-                UserImages = _context.BasketItemImages
-                    .Where(bi => bi.ProductId == p.Id && bi.Image.IsActive)
-                    .Select(bi => new ProductUserImageDto
-                    {
-                        Id = bi.Image.Id,
-                        ImageUrl = _configuration.GetSection("AppSettings")["StaticPath"] + "/Resources/BasketItem/" + bi.Image.ImageUrl,
-                        ImageDescription = bi.Image.ImageDescription,
-                        UserId = bi.UserId
-                    })
                     .ToList(),
                 Categories = _context.ProductProductCategories
                     .Where(pc => pc.ProductId == p.Id)
@@ -602,134 +479,6 @@ namespace Application.Services.Products.Queries
             item.IsInWishlist = wishlist.Any();
 
             return new ResultDto<ProductItemFrontendDto>
-            {
-                Data = item,
-                IsSuccess = true,
-                Message = "اطلاعات ارسال شد",
-                Status = 200
-            };
-        }
-
-        // --------------------- GetItemBranch (IsActive only, Price + WholePrice) ------------------
-        public ResultDto<ProductItemBranchDto> GetProductItemBranch(long productId, long userId, string publicToken)
-        {
-            var basket = _context.Baskets.AsQueryable();
-            var wishlist = _context.ProductWishes.AsQueryable();
-            if (userId != 0)
-            {
-                basket = basket.Where(p => p.BasketStatus == BasketStatus.Created && p.UserId == userId);
-            }
-            else
-            {
-                basket = basket.Where(p => p.Token == publicToken);
-            }
-
-            var item = _context.Products.Where(p => p.Id == productId && p.IsActive).Select(p => new ProductItemBranchDto
-            {
-                Id = p.Id,
-                ProductId = p.ProductId,
-                Name = p.Name,
-                Description = p.Description,
-                LongDescription = p.LongDescription,
-                MetaTitle = p.MetaTitle,
-                MetaDescription = p.MetaDescription,
-                Attribute = p.Attribute,
-                Price = p.Price,
-                WholePrice = p.WholePrice,
-                Quantity = p.Quantity,
-                MinBuyLimit = p.MinBuyLimit,
-                MaxBuyLimit = p.MaxBuyLimit,
-                Rating = p.Rating,
-                IsGrounded = p.IsGrounded,
-                IsActive = p.IsActive,
-                BrandId = p.BrandId,
-                BrandName = p.Brand.Title,
-                Hashtags = p.Hashtags
-                    .Select(ph => new HashtagItemDto
-                    {
-                        Id = ph.Hashtag.Id,
-                        Title = ph.Hashtag.Title
-                    })
-                    .ToList(),
-                Images = _context.Images
-                    .Where(i => i.ImageType == ImageTypeEnum.Product && i.ReferenceId == p.Id)
-                    .OrderByDescending(i => i.ImageRole == ImageRoleEnum.Primary)
-                    .ThenBy(i => i.Id)
-                    .Select(i => new ResultImageDto
-                    {
-                        Id = i.Id,
-                        Preview = _configuration.GetSection("AppSettings")["StaticPath"] + "/Resources/Product/" + i.ImageUrl
-                    })
-                    .Take(2)
-                    .ToList(),
-                UserImages = _context.BasketItemImages
-                    .Where(bi => bi.ProductId == p.Id && bi.Image.IsActive)
-                    .Select(bi => new ProductUserImageDto
-                    {
-                        Id = bi.Image.Id,
-                        ImageUrl = _configuration.GetSection("AppSettings")["StaticPath"] + "/Resources/BasketItem/" + bi.Image.ImageUrl,
-                        ImageDescription = bi.Image.ImageDescription,
-                        UserId = bi.UserId
-                    })
-                    .ToList(),
-                Categories = _context.ProductProductCategories
-                    .Where(pc => pc.ProductId == p.Id)
-                    .Select(pc => new ProductCategoryDto
-                    {
-                        Id = pc.CategoryId,
-                        Name = pc.Category.Name,
-                        Slug = _context.Slugs
-                                    .Where(s => s.ReferenceId == pc.Id && s.Type == SlugTypeEnum.ProductCategory)
-                                    .Select(s => s.Title)
-                                    .FirstOrDefault(),
-                    })
-                    .ToList(),
-                Offers = _context.ProductOffers
-                    .Where(o => o.ProductId == p.Id && o.OfferStatus == OfferStatus.Active)
-                    .Select(o => new ProductOfferItemDto
-                    {
-                        Id = o.Id,
-                        ProductId = o.ProductId,
-                        OfferDescription = o.OfferDescription,
-                        OfferPercentage = o.OfferPercentage,
-                        OfferStatus = o.OfferStatus,
-                        OfferStart = o.OfferStart,
-                        OfferEnd = o.OfferEnd,
-                        OfferLimit = o.OfferLimit
-                    })
-                    .ToList(),
-                Slug = _context.Slugs
-                    .Where(s => s.ReferenceId == p.Id && s.Type == SlugTypeEnum.Product)
-                    .Select(s => s.Title)
-                    .FirstOrDefault(),
-                CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt,
-            }).FirstOrDefault();
-
-            if (item == null)
-            {
-                return new ResultDto<ProductItemBranchDto>
-                {
-                    Data = null,
-                    IsSuccess = false,
-                    Status = 404,
-                    Message = "محصول یافت نشد"
-                };
-            }
-
-            var currentBasket = basket.FirstOrDefault();
-            if (currentBasket != null)
-            {
-                var basketItem = _context.BasketItems
-                    .Where(p => p.BasketId == currentBasket.Id && p.ProductId == item.Id)
-                    .FirstOrDefault();
-                item.BasketCount = basketItem?.Count ?? 0;
-            }
-
-            wishlist = wishlist.Where(p => p.ProductId == item.Id && p.UserId == userId);
-            item.IsInWishlist = wishlist.Any();
-
-            return new ResultDto<ProductItemBranchDto>
             {
                 Data = item,
                 IsSuccess = true,
@@ -964,7 +713,6 @@ namespace Application.Services.Products.Queries
                         Description = p.Description,
                         MetaTitle = p.MetaTitle,
                         MetaDescription = p.MetaDescription,
-                        Attribute = p.Attribute,
                         Price = p.Price,
                         Quantity = p.Quantity,
                         Rating = p.Rating,
