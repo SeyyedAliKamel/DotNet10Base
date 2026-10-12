@@ -23,6 +23,7 @@ namespace Application.Services.Users.Queries
         ResultDto<List<GetLimitUsersDto>> GetLimitUsers(RequestGetLimitUserDto request, long currentUserId);
         ResultDto<string> GetTemplateForUser(long userId, long currentUserId);
         ResultDto<ResultUserInfoDto> GetUserInfo(long userId);
+        ResultDto<List<ResultReferredUserDto>> GetReferredUsers(long currentUserId);
         ResultDto HasUserPermission(long userId, string action, string controller);
         ResultDto HasPermission();
     }
@@ -475,6 +476,47 @@ namespace Application.Services.Users.Queries
             // Existing code...
         }
 
+
+        public ResultDto<List<ResultReferredUserDto>> GetReferredUsers(long currentUserId)
+        {
+            try
+            {
+                var users = _context.Users
+                    .Where(u => u.ReferalUserId == currentUserId)
+                    .OrderByDescending(u => u.CreatedAt)
+                    .Select(u => new
+                    {
+                        u.Id,
+                        u.FirstName,
+                        u.LastName,
+                        u.Mobile,
+                        u.CreatedAt
+                    })
+                    .ToList();
+
+                var result = users.Select(u => new ResultReferredUserDto
+                {
+                    Id = u.Id,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Mobile = Helper.CensorMobile(u.Mobile),
+                    CreatedAt = u.CreatedAt
+                }).ToList();
+
+                return new ResultDto<List<ResultReferredUserDto>>
+                {
+                    Data = result,
+                    IsSuccess = true,
+                    Message = "لیست کاربران معرفی شده",
+                    Status = 200
+                };
+            }
+            catch (Exception ex)
+            {
+                return HandleException<List<ResultReferredUserDto>>(ex, currentUserId.ToString(), currentUserId);
+            }
+        }
+
         // ==================== Private Helpers ====================
         private void DetachAll()
         {
@@ -573,6 +615,14 @@ namespace Application.Services.Users.Queries
         public int PageSize { get; set; } = 20;
     }
 
+    public class ResultReferredUserDto
+    {
+        public long Id { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Mobile { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
     public class ResultUserInfoDto
     {
         public long UserId { get; set; }

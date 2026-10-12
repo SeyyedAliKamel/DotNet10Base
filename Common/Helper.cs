@@ -12,6 +12,48 @@ namespace Common
 {
     public static class Helper
     {
+        public static Dictionary<string, string>? CheckModel(this ActionExecutingContext filterContext)
+        {
+            var validationResults = new List<ValidationResult>();
+            foreach (var argument in filterContext.ActionArguments.Values)
+            {
+                if (argument == null) continue;
+                var ass = argument.GetType().GetProperties();
+                foreach (var filed in ass)
+                {
+                    if (!filed.CanWrite) continue; // saeed
+                    if (filed.PropertyType != typeof(string)) continue;
+                    var value = filed.GetValue(argument);
+                    if (value == null) continue;
+                    if (filed.Name.ToLower() != "password")
+                    {
+                        value = ((string)value).Trim();
+                    }
+                    if (filed.Name.ToLower() == "email")
+                    {
+                        value = ((string)value).ToLower();
+                    }
+                    value = ((string)value).ToEnglish();
+                    value = ((string)value).ToPersian();
+                    filed.SetValue(argument, ((string)value).Trim());
+                }
+                var context = new ValidationContext(argument, serviceProvider: null, items: null);
+                Validator.TryValidateObject(argument, context, validationResults, true);
+            }
+
+            if (!validationResults.Any()) return null;
+            var errorResult = new Dictionary<string, string>();
+            validationResults.ForEach(x =>
+            {
+                if (x.ErrorMessage == null) return;
+                var ed = x.ErrorMessage.Split(":");
+                if (!errorResult.ContainsKey(ed.First()))
+                {
+                    errorResult.Add(ed.First(), ed.Last());
+                }
+            });
+            return errorResult;
+        }
         public static string ConvertTitleToSlug(string title)
         {
             string slug = title.ToLower().ToEnglish().ToPersian(); // Convert to lowercase
@@ -188,6 +230,71 @@ namespace Common
             normalized = normalized.Trim('-');
 
             return normalized.ToLowerInvariant();
+        }
+
+        private static readonly Regex UnsafeFileNameChars = new Regex(@"[^a-zA-Z0-9\-_\.]", RegexOptions.Compiled);
+
+        public static string SanitizeFileName(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+                return fileName;
+
+            fileName = Path.GetFileName(fileName);
+
+            var extension = Path.GetExtension(fileName);
+            var nameOnly = Path.GetFileNameWithoutExtension(fileName);
+
+            nameOnly = nameOnly.Replace(" ", "-");
+
+            nameOnly = UnsafeFileNameChars.Replace(nameOnly, "");
+            extension = UnsafeFileNameChars.Replace(extension, "");
+
+            if (string.IsNullOrWhiteSpace(nameOnly))
+                nameOnly = "file";
+
+            return nameOnly + extension;
+        }
+
+        public static List<long> JsonDeserialize(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return new List<long>();
+
+            // 1. Handle comma-separated strings (e.g., "1,2")
+            if (value.Contains(","))
+            {
+                return value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => long.TryParse(s.Trim(), out long n) ? n : (long?)null)
+                            .Where(n => n.HasValue)
+                            .Select(n => n.Value)
+                            .ToList();
+            }
+
+            // 2. Handle single numeric values (e.g., "1")
+            if (long.TryParse(value, out long singleValue))
+                return new List<long> { singleValue };
+
+            // 3. Handle standard JSON arrays (e.g., "[1, 2]") as a fallback
+            try
+            {
+                return JsonConvert.DeserializeObject<List<long>>(value) ?? new List<long>();
+            }
+            catch
+            {
+                return new List<long>();
+            }
+        }
+
+        public static string? CensorMobile(string? mobile)
+        {
+            if (string.IsNullOrWhiteSpace(mobile) || mobile.Length <= 7)
+                return mobile;
+
+            var visibleStart = mobile[..4];
+            var visibleEnd = mobile[^3..];
+            var maskedLength = mobile.Length - 7;
+
+            return visibleStart + new string('*', maskedLength) + visibleEnd;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Infrastructure.ExternalApi.FileServer
         Task<List<string>> UploadImages(List<IFormFile> files, TypeSaveFile typeSaveFile, List<string> fileName);
         Task<string> UploadImage(List<IFormFile> files, TypeSaveFile typeSaveFile, string fileName);
         Task<List<ResultUserExcelDto>> UploadUserExcelFile(List<IFormFile> files, TypeSaveFile typeSaveFile, string fileName);
-        Task<bool> DeleteImage(string imagePath);
+        Task<bool> DeleteImage(string imagePath, TypeSaveFile typeSaveFile);
     }
     public class FileUploadService : IFileUploadService
     {
@@ -96,7 +96,7 @@ namespace Infrastructure.ExternalApi.FileServer
             return response.Content;
         }
 
-        public async Task<bool> DeleteImage(string imagePath)
+        public async Task<bool> DeleteImage(string imagePath, TypeSaveFile typeSaveFile)
         {
             if (string.IsNullOrWhiteSpace(imagePath))
                 return true; // nothing to delete
@@ -109,9 +109,13 @@ namespace Infrastructure.ExternalApi.FileServer
             };
             var client = new RestClient(options);
             var request = new RestRequest("/api/File/DeleteImage?apikey=bahram", Method.Delete);
-            request.AddParameter("path", imagePath);
+
+            // e.g. "Resources/Branch/bacaa820-....webp"
+            string fullPath = $"Resources/{GetPathFile(typeSaveFile)}/{imagePath.TrimStart('/')}";
+            request.AddParameter("path", fullPath);
 
             RestResponse response = await client.ExecuteAsync(request);
+            Console.WriteLine($"DELETE {response.ResponseUri} | {(int)response.StatusCode} | {response.Content}");
 
             return response.IsSuccessful;
         }
@@ -122,14 +126,12 @@ namespace Infrastructure.ExternalApi.FileServer
             var formFile = files[0];
             using (var stream = new MemoryStream())
             {
-                // Save the uploaded file to the memory stream
                 await formFile.CopyToAsync(stream);
                 stream.Position = 0;
 
-                // Use ClosedXML to read the Excel file from the stream
                 using (var workbook = new XLWorkbook(stream))
                 {
-                    IXLWorksheet worksheet = workbook.Worksheet(1); // Get the first worksheet
+                    IXLWorksheet worksheet = workbook.Worksheet(1);
 
 
 
@@ -219,7 +221,7 @@ namespace Infrastructure.ExternalApi.FileServer
                 case TypeSaveFile.ContentCategory:
                     return "ContentCategory";
                     break;
-                
+
                 case TypeSaveFile.Public:
                     return "Public";
                     break;

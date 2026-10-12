@@ -18,7 +18,7 @@ namespace Application.Services.Contents.Queries
 
         // -------- Frontend-facing (active & non-deleted only) --------
         ResultDto<ResultContentItemDto> GetContentItemFrontEnd(long Id);
-        ResultDto<List<ResultContentListDto>> GetContentListFrontEnd(RequestListFrontendDto request,long categoryId);
+        ResultDto<List<ResultContentListDto>> GetContentListFrontEnd(RequestListFrontendDto request);
     }
 
     public class ContentService : IContentService
@@ -266,18 +266,14 @@ namespace Application.Services.Contents.Queries
         }
 
         // -------------------- GetListFrontEnd --------------------
-        public ResultDto<List<ResultContentListDto>> GetContentListFrontEnd(RequestListFrontendDto request, long categoryId)
+        public ResultDto<List<ResultContentListDto>> GetContentListFrontEnd(RequestListFrontendDto request)
         {
             try
             {
                 var Contents = _context.Contents
                     .Where(p => p.IsActive && !p.IsDeleted && p.ReleaseDate <= DateTime.Now)
                     .AsQueryable();
-                if(categoryId!=0)
-                {
-                    Contents = Contents.Where(p=>p.ContentCategoryId== categoryId);
 
-                }
                 Contents = Contents.ApplySortingAndFiltering(request.Sort, request.Filter);
 
                 if (string.IsNullOrWhiteSpace(request.Sort))

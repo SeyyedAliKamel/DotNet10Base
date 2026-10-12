@@ -1,5 +1,7 @@
 <Solution>
-  <Folder Name="/Src/" />
+  <Folder Name="/Src/">
+    <File Path="README.md" />
+  </Folder>
   <Folder Name="/Src/Common/">
     <Project Path="Common/Common.csproj" />
   </Folder>
