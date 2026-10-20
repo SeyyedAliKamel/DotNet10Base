@@ -11,9 +11,6 @@ using System;
 using System.Collections.Generic;
 namespace AdminWebApi.Controllers.AdditionalInformation
 {
-    /// <summary>
-    /// Handles operations related to banners.
-    /// </summary>
     [ApiController]
     [Route("api/[controller]/[action]")]
     public class BannerController : BaseController

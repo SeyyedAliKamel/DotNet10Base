@@ -146,7 +146,7 @@ Contributions, suggestions, and bug reports are welcome.
 
 ## 📄 License
 
-No license has been specified here. Add a `LICENSE` file and update this section before distributing the project for reuse.
+This project is licensed under the MIT License.
 
 ## 👤 Author
 
